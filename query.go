@@ -1,6 +1,6 @@
 // Package query executes resource queries by coordinating parsing, planning,
 // SQL generation, data access, result materialization, and pagination.
-package query
+package querystack
 
 import (
 	"context"
