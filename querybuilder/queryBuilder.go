@@ -1,5 +1,5 @@
-// package querybuilder is used to build query statements with arguments
-// replaced by placeholders
+// package querybuilder is used to build query statements with support for using
+// placeholders for args
 package querybuilder
 
 import (
