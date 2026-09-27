@@ -6,15 +6,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/turnerbenjamin/querystack/paginationTokens"
-	qstore "github.com/turnerbenjamin/querystack/queryDataStore"
-	qerr "github.com/turnerbenjamin/querystack/queryError"
-	"github.com/turnerbenjamin/querystack/queryModel"
-	mdl "github.com/turnerbenjamin/querystack/queryModel"
-	"github.com/turnerbenjamin/querystack/queryParser"
-	qplan "github.com/turnerbenjamin/querystack/queryPlanner"
-	azSqlWriter "github.com/turnerbenjamin/querystack/queryWriters/azSqlWriter"
-	valuebuilder "github.com/turnerbenjamin/querystack/valueBuilder"
+	"github.com/turnerbenjamin/querystack/paginationtokens"
+	qstore "github.com/turnerbenjamin/querystack/querydatastore"
+	qerr "github.com/turnerbenjamin/querystack/queryerror"
+	mdl "github.com/turnerbenjamin/querystack/querymodel"
+	"github.com/turnerbenjamin/querystack/queryparser"
+	qplan "github.com/turnerbenjamin/querystack/queryplanner"
+	azSqlWriter "github.com/turnerbenjamin/querystack/querywriter/azsqlwriter"
+	valuebuilder "github.com/turnerbenjamin/querystack/valuebuilder"
 )
 
 // sqlFlavour identifies the SQL dialect used to execute queries.
@@ -46,7 +45,7 @@ type QueryExecutor interface {
 		ctx context.Context,
 		resourceName string,
 		queryString string,
-	) (*queryModel.ExecuteResult, error)
+	) (*mdl.ExecuteResult, error)
 }
 
 // QueryExecutorConfig configures a query executor and its dependencies.
@@ -63,7 +62,7 @@ type QueryExecutorConfig struct {
 // NewQueryExecutorFactory creates a query executor from the supplied
 // configuration.
 func NewQueryExecutorFactory(config QueryExecutorConfig) (QueryExecutor, error) {
-	pagingTokenBuilder, err := paginationTokens.NewPagingTokenBuilder(
+	pagingTokenBuilder, err := paginationtokens.NewPagingTokenBuilder(
 		config.PaginationTokenSigner,
 		config.PaginationTokenSecret,
 	)
@@ -83,7 +82,7 @@ func NewQueryExecutorFactory(config QueryExecutorConfig) (QueryExecutor, error) 
 		accessPolicy:           config.AccessPolicy,
 		pagingTokenBuilder:     pagingTokenBuilder,
 		queryWriterGetter:      sqlWriterGetter,
-		queryParserInitialiser: queryParser.NewQueryParser,
+		queryParserInitialiser: queryparser.NewQueryParser,
 		queryConfig:            mdl.QueryConfigWithDefaults(config.queryConfig),
 	}, err
 }
@@ -94,7 +93,7 @@ func (qf *queryExecutor) Execute(
 	ctx context.Context,
 	resourceName string,
 	queryString string,
-) (*queryModel.ExecuteResult, error) {
+) (*mdl.ExecuteResult, error) {
 	rootResource, exists := qf.schema.GetResource(resourceName)
 	if !exists {
 		return nil, qerr.BindingErr("the table %s does not exist in the schema", resourceName)

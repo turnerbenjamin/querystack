@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"iter"
 
-	mdl "github.com/turnerbenjamin/querystack/queryModel"
+	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
 // aliasType identifies the kind of alias mapping being managed.
