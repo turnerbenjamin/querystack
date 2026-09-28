@@ -33,7 +33,6 @@ type queryExecutor struct {
 	repository             mdl.Repository
 	queryConfig            mdl.QueryConfig
 	schema                 mdl.Schema
-	accessPolicy           mdl.AccessPolicy
 	pagingTokenBuilder     qplan.PagingTokenBuilder
 	queryWriterGetter      QueryWriterGetter
 	queryParserInitialiser QueryParserInitialiser
@@ -44,6 +43,7 @@ type QueryExecutor interface {
 	Execute(
 		ctx context.Context,
 		resourceName string,
+		accessPolicy mdl.AccessPolicy,
 		queryString string,
 	) (*mdl.ExecuteResult, error)
 }
@@ -79,7 +79,6 @@ func NewQueryExecutorFactory(config QueryExecutorConfig) (QueryExecutor, error) 
 	return &queryExecutor{
 		repository:             config.Repo,
 		schema:                 config.Schema,
-		accessPolicy:           config.AccessPolicy,
 		pagingTokenBuilder:     pagingTokenBuilder,
 		queryWriterGetter:      sqlWriterGetter,
 		queryParserInitialiser: queryparser.NewQueryParser,
@@ -92,6 +91,7 @@ func NewQueryExecutorFactory(config QueryExecutorConfig) (QueryExecutor, error) 
 func (qf *queryExecutor) Execute(
 	ctx context.Context,
 	resourceName string,
+	accessPolicy mdl.AccessPolicy,
 	queryString string,
 ) (*mdl.ExecuteResult, error) {
 	rootResource, exists := qf.schema.GetResource(resourceName)
@@ -110,7 +110,7 @@ func (qf *queryExecutor) Execute(
 		qf.pagingTokenBuilder,
 		valueBuilder,
 		rootResource,
-		qf.accessPolicy,
+		accessPolicy,
 	)
 	if err != nil {
 		return nil, err
