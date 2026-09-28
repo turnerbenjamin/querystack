@@ -39,9 +39,9 @@ const (
 	QueryErrInternalErr
 )
 
-// queryError is used to return an error with a category. This may be used to
+// QueryError is used to return an error with a category. This may be used to
 // determine whether to surface the specifc error to the user or not
-type queryError struct {
+type QueryError struct {
 	category queryErrorCategory
 	err      error
 }
@@ -53,7 +53,7 @@ func GetErrorCategory(err error) queryErrorCategory {
 		return QueryErrUnknown
 	}
 
-	qerr, success := errors.AsType[queryError](err)
+	qerr, success := errors.AsType[QueryError](err)
 	if success {
 		return qerr.category
 	}
@@ -62,13 +62,13 @@ func GetErrorCategory(err error) queryErrorCategory {
 }
 
 // Error returns the error message
-func (e queryError) Error() string {
+func (e QueryError) Error() string {
 	return e.err.Error()
 }
 
 // SyntaxErr builds a queryError with the category QueryErrSyntaxErr
 func SyntaxErr(m string, a ...any) error {
-	return queryError{
+	return QueryError{
 		category: QueryErrSyntaxErr,
 		err:      fmt.Errorf(m, a...),
 	}
@@ -76,7 +76,7 @@ func SyntaxErr(m string, a ...any) error {
 
 // BindingErr builds a queryError with the category QueryErrBindingErr
 func BindingErr(m string, a ...any) error {
-	return queryError{
+	return QueryError{
 		category: QueryErrBindingErr,
 		err:      fmt.Errorf(m, a...),
 	}
@@ -84,7 +84,7 @@ func BindingErr(m string, a ...any) error {
 
 // AccessErr builds a queryError with the category QueryErrAccessErr
 func AccessErr(m string, a ...any) error {
-	return queryError{
+	return QueryError{
 		category: QueryErrAccessErr,
 		err:      fmt.Errorf(m, a...),
 	}
@@ -93,7 +93,7 @@ func AccessErr(m string, a ...any) error {
 // PagingTokenErr builds a queryError with the category
 // QueryErrInvalidPagingTokenErr
 func PagingTokenErr(m string, a ...any) error {
-	return queryError{
+	return QueryError{
 		category: QueryErrInvalidPagingTokenErr,
 		err:      fmt.Errorf(m, a...),
 	}
@@ -101,7 +101,7 @@ func PagingTokenErr(m string, a ...any) error {
 
 // InternalErr builds a queryError with the category QueryErrInternalErr
 func InternalErr(m string, a ...any) error {
-	return queryError{
+	return QueryError{
 		category: QueryErrInternalErr,
 		err:      fmt.Errorf(m, a...),
 	}
