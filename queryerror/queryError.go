@@ -42,8 +42,8 @@ const (
 // QueryError is used to return an error with a category. This may be used to
 // determine whether to surface the specifc error to the user or not
 type QueryError struct {
-	category queryErrorCategory
-	err      error
+	Category queryErrorCategory
+	Err      error
 }
 
 // GetErrorCategory returns the queryErrorCategory for a given error. If the
@@ -55,7 +55,7 @@ func GetErrorCategory(err error) queryErrorCategory {
 
 	qerr, success := errors.AsType[QueryError](err)
 	if success {
-		return qerr.category
+		return qerr.Category
 	}
 
 	return QueryErrUnknown
@@ -63,30 +63,30 @@ func GetErrorCategory(err error) queryErrorCategory {
 
 // Error returns the error message
 func (e QueryError) Error() string {
-	return e.err.Error()
+	return e.Err.Error()
 }
 
 // SyntaxErr builds a queryError with the category QueryErrSyntaxErr
 func SyntaxErr(m string, a ...any) error {
 	return QueryError{
-		category: QueryErrSyntaxErr,
-		err:      fmt.Errorf(m, a...),
+		Category: QueryErrSyntaxErr,
+		Err:      fmt.Errorf(m, a...),
 	}
 }
 
 // BindingErr builds a queryError with the category QueryErrBindingErr
 func BindingErr(m string, a ...any) error {
 	return QueryError{
-		category: QueryErrBindingErr,
-		err:      fmt.Errorf(m, a...),
+		Category: QueryErrBindingErr,
+		Err:      fmt.Errorf(m, a...),
 	}
 }
 
 // AccessErr builds a queryError with the category QueryErrAccessErr
 func AccessErr(m string, a ...any) error {
 	return QueryError{
-		category: QueryErrAccessErr,
-		err:      fmt.Errorf(m, a...),
+		Category: QueryErrAccessErr,
+		Err:      fmt.Errorf(m, a...),
 	}
 }
 
@@ -94,15 +94,15 @@ func AccessErr(m string, a ...any) error {
 // QueryErrInvalidPagingTokenErr
 func PagingTokenErr(m string, a ...any) error {
 	return QueryError{
-		category: QueryErrInvalidPagingTokenErr,
-		err:      fmt.Errorf(m, a...),
+		Category: QueryErrInvalidPagingTokenErr,
+		Err:      fmt.Errorf(m, a...),
 	}
 }
 
 // InternalErr builds a queryError with the category QueryErrInternalErr
 func InternalErr(m string, a ...any) error {
 	return QueryError{
-		category: QueryErrInternalErr,
-		err:      fmt.Errorf(m, a...),
+		Category: QueryErrInternalErr,
+		Err:      fmt.Errorf(m, a...),
 	}
 }
