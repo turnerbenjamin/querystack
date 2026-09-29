@@ -6,6 +6,12 @@ package querymodel
 
 import "context"
 
+// sqlFlavour identifies the SQL dialect used to execute queries.
+type SqlFlavour string
+
+// sqlFlavorAzureSql represents azure sql syntax
+const SqlFlavorAzureSql SqlFlavour = "azure_sql"
+
 // ExecuteResult represents the type returned when Executing a Query
 type ExecuteResult struct {
 	Count         *uint64      `json:"count,omitempty"`

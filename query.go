@@ -9,17 +9,13 @@ import (
 	"github.com/turnerbenjamin/querystack/paginationtokens"
 	qstore "github.com/turnerbenjamin/querystack/querydatastore"
 	qerr "github.com/turnerbenjamin/querystack/queryerror"
+	"github.com/turnerbenjamin/querystack/querymodel"
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 	"github.com/turnerbenjamin/querystack/queryparser"
 	qplan "github.com/turnerbenjamin/querystack/queryplanner"
 	azSqlWriter "github.com/turnerbenjamin/querystack/querywriter/azsqlwriter"
 	valuebuilder "github.com/turnerbenjamin/querystack/valuebuilder"
 )
-
-// sqlFlavour identifies the SQL dialect used to execute queries.
-type sqlFlavour string
-
-const SqlFlavorAzureSql sqlFlavour = "azure_sql"
 
 // QueryWriterGetter creates a query writer for a planned query data store.
 type QueryWriterGetter func(s qstore.QueryDataStore) mdl.QueryWriter
@@ -48,41 +44,61 @@ type QueryExecutor interface {
 	) (*mdl.ExecuteResult, error)
 }
 
-// QueryExecutorConfig configures a query executor and its dependencies.
-type QueryExecutorConfig struct {
-	Repo                  mdl.Repository
-	Schema                mdl.Schema
-	AccessPolicy          mdl.AccessPolicy
-	PaginationTokenSigner mdl.PayloadSigner
-	PaginationTokenSecret []byte
-	SqlFlavor             sqlFlavour
-	queryConfig           mdl.QueryConfig
-}
-
 // NewQueryExecutorFactory creates a query executor from the supplied
 // configuration.
-func NewQueryExecutorFactory(config QueryExecutorConfig) (QueryExecutor, error) {
+func NewQueryExecutorFactory(
+	repository mdl.Repository,
+	schema mdl.Schema,
+	paginationTokenSigner mdl.PayloadSigner,
+	paginationTokenSecret []byte,
+	sqlFlavor querymodel.SqlFlavour,
+	queryConfig mdl.QueryConfig,
+) (QueryExecutor, error) {
+	if repository == nil {
+		return nil, qerr.InternalErr(
+			"unable to build query executor factory: repository is nil",
+		)
+	}
+
+	if schema == nil {
+		return nil, qerr.InternalErr(
+			"unable to build query executor factory: schema token secret is nil",
+		)
+	}
+
+	if paginationTokenSigner == nil {
+		return nil, qerr.InternalErr(
+			"unable to build query executor factory: pagination token signer is nil",
+		)
+	}
+
+	if paginationTokenSecret == nil {
+		return nil, qerr.InternalErr(
+			"unable to build query executor factory: pagination token secret is nil",
+		)
+	}
+
 	pagingTokenBuilder, err := paginationtokens.NewPagingTokenBuilder(
-		config.PaginationTokenSigner,
-		config.PaginationTokenSecret,
+		paginationTokenSigner,
+		paginationTokenSecret,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	sqlWriterGetter, err := getSqlWriter(config.SqlFlavor)
+	sqlWriterGetter, err := getSqlWriter(sqlFlavor)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &queryExecutor{
-		repository:             config.Repo,
-		schema:                 config.Schema,
+		repository:             repository,
+		schema:                 schema,
 		pagingTokenBuilder:     pagingTokenBuilder,
 		queryWriterGetter:      sqlWriterGetter,
 		queryParserInitialiser: queryparser.NewQueryParser,
-		queryConfig:            mdl.QueryConfigWithDefaults(config.queryConfig),
+		queryConfig:            mdl.QueryConfigWithDefaults(queryConfig),
 	}, err
 }
 
@@ -144,9 +160,9 @@ func (qf *queryExecutor) Execute(
 }
 
 // getSqlWriter returns a query writer factory for the requested SQL dialect.
-func getSqlWriter(flavour sqlFlavour) (QueryWriterGetter, error) {
+func getSqlWriter(flavour querymodel.SqlFlavour) (QueryWriterGetter, error) {
 	switch flavour {
-	case SqlFlavorAzureSql:
+	case querymodel.SqlFlavorAzureSql:
 		return azSqlWriter.NewQueryWriter, nil
 	default:
 		return nil, fmt.Errorf("unsupported sql flavour: %s", flavour)
