@@ -18,26 +18,20 @@ type pointValue struct {
 	value mdl.Point
 }
 
-// supportedComparisonOperatorsPoint lists the comparison operators supported by
-// point values.
-var supportedComparisonOperatorsPoint = map[mdl.ComparisonOperator]struct{}{}
-
 // Type returns the query value type represented by the value.
 func (v pointValue) Type() mdl.ValueType {
 	return mdl.ValueTypePoint
 }
 
-// SupportsType reports whether the value can be used with the given database
-// type.
-func (v pointValue) SupportsType(t mdl.DbType) bool {
-	return t == mdl.DbTypePoint
-}
-
-// SupportsOperator reports whether the value supports the given comparison
-// operator.
-func (v pointValue) SupportsOperator(op mdl.ComparisonOperator) bool {
-	_, supported := supportedComparisonOperatorsPoint[op]
-	return supported
+// SupportsComparison indicates if a comparison can be made with the given value
+func (v pointValue) SupportsComparison(
+	t mdl.DbType,
+	op mdl.ComparisonOperator,
+) bool {
+	if t != mdl.DbTypePoint {
+		return false
+	}
+	return mdl.DbTypeSupportsSingleValueOperation(mdl.DbTypePoint, op)
 }
 
 // WriteFilterExpression delegates filter generation to the query writer for

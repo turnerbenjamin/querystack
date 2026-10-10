@@ -19,6 +19,14 @@ type ExecuteResult struct {
 	Data          []TableModel `json:"data"`
 }
 
+// TypedExecuteResult represents the type returned when Executing a Query with
+// a parameterised type
+type TypedExecuteResult[T TableModel] struct {
+	Count         *uint64 `json:"count,omitempty"`
+	NextPageToken string  `json:"next_page_token,omitempty"`
+	Data          []T     `json:"data"`
+}
+
 // QueryStatement represents a query statement and the args for any placeholder
 // values
 type QueryStatement struct {

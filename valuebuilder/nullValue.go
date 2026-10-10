@@ -16,28 +16,17 @@ import (
 // nullValue represents a null query value.
 type nullValue struct{}
 
-// supportedComparisonOperatorsNull lists the comparison operators supported by
-// null values.
-var supportedComparisonOperatorsNull = map[mdl.ComparisonOperator]struct{}{
-	mdl.ComparisonEq: {},
-	mdl.ComparisonNe: {},
-}
-
 // Type returns the query value type represented by the value.
 func (v nullValue) Type() mdl.ValueType {
 	return mdl.ValueTypeNull
 }
 
-// SupportsType reports that null values can be used with any database type.
-func (v nullValue) SupportsType(_ mdl.DbType) bool {
-	return true
-}
-
-// SupportsOperator reports whether the value supports the given comparison
-// operator.
-func (v nullValue) SupportsOperator(op mdl.ComparisonOperator) bool {
-	_, supported := supportedComparisonOperatorsNull[op]
-	return supported
+// SupportsComparison indicates if a comparison can be made with the given value
+func (v nullValue) SupportsComparison(
+	t mdl.DbType,
+	op mdl.ComparisonOperator,
+) bool {
+	return op == mdl.ComparisonEq || op == mdl.ComparisonNe
 }
 
 // WriteFilterExpression delegates filter generation for the null value to the

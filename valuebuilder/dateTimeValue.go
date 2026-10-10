@@ -20,33 +20,20 @@ type dateTimeValue struct {
 	value time.Time
 }
 
-// supportedComparisonOperatorsDateTime is the set of comparison operators that
-// dateTime supports
-var supportedComparisonOperatorsDateTime = map[mdl.ComparisonOperator]struct{}{
-	mdl.ComparisonEq: {},
-	mdl.ComparisonNe: {},
-	mdl.ComparisonGt: {},
-	mdl.ComparisonGe: {},
-	mdl.ComparisonLt: {},
-	mdl.ComparisonLe: {},
-}
-
 // Type returns the query value type represented by the value.
 func (v dateTimeValue) Type() mdl.ValueType {
 	return mdl.ValueTypeDateTime
 }
 
-// SupportsType reports whether the value can be used with the given database
-// type.
-func (v dateTimeValue) SupportsType(t mdl.DbType) bool {
-	return t == mdl.DbTypeDateTime
-}
-
-// SupportsOperator reports whether the value supports the given comparison
-// operator.
-func (v dateTimeValue) SupportsOperator(op mdl.ComparisonOperator) bool {
-	_, supported := supportedComparisonOperatorsDateTime[op]
-	return supported
+// SupportsComparison indicates if a comparison can be made with the given value
+func (v dateTimeValue) SupportsComparison(
+	t mdl.DbType,
+	op mdl.ComparisonOperator,
+) bool {
+	if t != mdl.DbTypeDateTime {
+		return false
+	}
+	return mdl.DbTypeSupportsSingleValueOperation(mdl.DbTypeDateTime, op)
 }
 
 // WriteFilterExpression writes a filter expression for the date-time value.

@@ -19,29 +19,20 @@ type intListValue struct {
 	value []int64
 }
 
-// supportedComparisonOperatorsIntList lists the comparison operators supported
-// by integer list values.
-var supportedComparisonOperatorsIntList = map[mdl.ComparisonOperator]struct{}{
-	mdl.ComparisonIn:    {},
-	mdl.ComparisonNotIn: {},
-}
-
 // Type returns the query value type represented by the value.
 func (v intListValue) Type() mdl.ValueType {
 	return mdl.ValueTypeIntList
 }
 
-// SupportsType reports whether the value can be used with the given database
-// type.
-func (v intListValue) SupportsType(t mdl.DbType) bool {
-	return t == mdl.DbTypeInt || t == mdl.DbTypeFloat
-}
-
-// SupportsOperator reports whether the value supports the given comparison
-// operator.
-func (v intListValue) SupportsOperator(op mdl.ComparisonOperator) bool {
-	_, supported := supportedComparisonOperatorsIntList[op]
-	return supported
+// SupportsComparison indicates if a comparison can be made with the given value
+func (v intListValue) SupportsComparison(
+	t mdl.DbType,
+	op mdl.ComparisonOperator,
+) bool {
+	if t != mdl.DbTypeInt && t != mdl.DbTypeFloat {
+		return false
+	}
+	return mdl.DbTypeSupportsCollectionValueOperation(t, op)
 }
 
 // WriteFilterExpression delegates filter generation to the query writer for the

@@ -18,33 +18,20 @@ type floatValue struct {
 	value float64
 }
 
-// supportedComparisonOperatorsFloat lists the comparison operators supported
-// by float values.
-var supportedComparisonOperatorsFloat = map[mdl.ComparisonOperator]struct{}{
-	mdl.ComparisonEq: {},
-	mdl.ComparisonNe: {},
-	mdl.ComparisonGt: {},
-	mdl.ComparisonGe: {},
-	mdl.ComparisonLt: {},
-	mdl.ComparisonLe: {},
-}
-
 // Type returns the query value type represented by the value.
 func (v floatValue) Type() mdl.ValueType {
 	return mdl.ValueTypeFloat
 }
 
-// SupportsType reports whether the value can be used with the given database
-// type.
-func (v floatValue) SupportsType(t mdl.DbType) bool {
-	return t == mdl.DbTypeFloat
-}
-
-// SupportsOperator reports whether the value supports the given comparison
-// operator.
-func (v floatValue) SupportsOperator(op mdl.ComparisonOperator) bool {
-	_, supported := supportedComparisonOperatorsFloat[op]
-	return supported
+// SupportsComparison indicates if a comparison can be made with the given value
+func (v floatValue) SupportsComparison(
+	t mdl.DbType,
+	op mdl.ComparisonOperator,
+) bool {
+	if t != mdl.DbTypeFloat {
+		return false
+	}
+	return mdl.DbTypeSupportsSingleValueOperation(mdl.DbTypeFloat, op)
 }
 
 // WriteFilterExpression delegates filter generation to the query writer for the

@@ -19,29 +19,20 @@ type stringListValue struct {
 	value []string
 }
 
-// supportedComparisonOperatorsStringList lists the comparison operators
-// supported by string list values.
-var supportedComparisonOperatorsStringList = map[mdl.ComparisonOperator]struct{}{
-	mdl.ComparisonIn:    {},
-	mdl.ComparisonNotIn: {},
-}
-
 // Type returns the query value type represented by the value.
 func (v stringListValue) Type() mdl.ValueType {
 	return mdl.ValueTypeStringList
 }
 
-// SupportsType reports whether the value can be used with the given database
-// type.
-func (v stringListValue) SupportsType(t mdl.DbType) bool {
-	return t == mdl.DbTypeString
-}
-
-// SupportsOperator reports whether the value supports the given comparison
-// operator.
-func (v stringListValue) SupportsOperator(op mdl.ComparisonOperator) bool {
-	_, supported := supportedComparisonOperatorsStringList[op]
-	return supported
+// SupportsComparison indicates if a comparison can be made with the given value
+func (v stringListValue) SupportsComparison(
+	t mdl.DbType,
+	op mdl.ComparisonOperator,
+) bool {
+	if t != mdl.DbTypeString {
+		return false
+	}
+	return mdl.DbTypeSupportsCollectionValueOperation(mdl.DbTypeString, op)
 }
 
 // WriteFilterExpression delegates filter generation to the query writer for the

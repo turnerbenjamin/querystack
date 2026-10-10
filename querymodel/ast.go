@@ -11,26 +11,6 @@ import (
 	querybuilder "github.com/turnerbenjamin/querystack/querybuilder"
 )
 
-// DbType represents the normalized database type
-type DbType string
-
-const (
-	// DbTypeString represents a string database value
-	DbTypeString DbType = "string"
-
-	// DbTypeInt represents an integer database value
-	DbTypeInt DbType = "int"
-
-	// DbTypeFloat represents a floating-point database value
-	DbTypeFloat DbType = "float"
-
-	// DbTypePoint represents a geographic point database value
-	DbTypePoint DbType = "point"
-
-	// DbTypeDateType represents a date and time database value
-	DbTypeDateTime DbType = "date/time"
-)
-
 // ValueType represents a value for a comparison expression
 type ValueType uint8
 
@@ -221,13 +201,9 @@ type Value interface {
 	// Type returns the associated ValueType
 	Type() ValueType
 
-	// SupportsType indicates whether the value can be used in a comparison
-	// expression against a column of a given DbType
-	SupportsType(t DbType) bool
-
-	// SupportsOperator indicates whether the value can be used in a comparison
-	// expression with a given comparison operator
-	SupportsOperator(op ComparisonOperator) bool
+	// SupportsComparison indicates if a given comparison can be made with that
+	// value
+	SupportsComparison(t DbType, op ComparisonOperator) bool
 
 	// Serialise is used to serialise a given value when building paging tokens.
 	// It receives a serialiser, which provides the business logic to serialise

@@ -41,6 +41,15 @@ type Resource interface {
 	) ([]TableModel, error)
 }
 
+type TypedResource[T TableModel] interface {
+	Resource
+
+	TypedSliceFromJSON(
+		jsonData []byte,
+		ProjectionNode *ProjectionNode,
+	) ([]T, error)
+}
+
 // TableModel is a representation of a specific database table
 type TableModel interface {
 	// GetValueExpression returns the value stored at a given path as a value

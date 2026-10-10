@@ -25,7 +25,7 @@ type QueryParserInitialiser func() qplan.QueryParser
 
 // queryExecutor coordinates query parsing, planning, execution, and result
 // materialization.
-type queryExecutor struct {
+type QueryExecutor struct {
 	repository             mdl.Repository
 	queryConfig            mdl.QueryConfig
 	schema                 mdl.Schema
@@ -34,26 +34,16 @@ type queryExecutor struct {
 	queryParserInitialiser QueryParserInitialiser
 }
 
-// QueryExecutor executes resource queries and returns their results.
-type QueryExecutor interface {
-	Execute(
-		ctx context.Context,
-		resourceName string,
-		accessPolicy mdl.AccessPolicy,
-		queryString string,
-	) (*mdl.ExecuteResult, error)
-}
-
 // NewQueryExecutorFactory creates a query executor from the supplied
 // configuration.
-func NewQueryExecutorFactory(
+func NewQueryExecutor(
 	repository mdl.Repository,
 	schema mdl.Schema,
 	paginationTokenSigner mdl.PayloadSigner,
 	paginationTokenSecret []byte,
 	sqlFlavor querymodel.SqlFlavour,
 	queryConfig mdl.QueryConfig,
-) (QueryExecutor, error) {
+) (*QueryExecutor, error) {
 	if repository == nil {
 		return nil, qerr.InternalErr(
 			"unable to build query executor factory: repository is nil",
@@ -92,7 +82,7 @@ func NewQueryExecutorFactory(
 		return nil, err
 	}
 
-	return &queryExecutor{
+	return &QueryExecutor{
 		repository:             repository,
 		schema:                 schema,
 		pagingTokenBuilder:     pagingTokenBuilder,
@@ -104,28 +94,87 @@ func NewQueryExecutorFactory(
 
 // Execute parses, plans, executes, and materializes a query for the named
 // resource.
-func (qf *queryExecutor) Execute(
+func (executor *QueryExecutor) Execute(
 	ctx context.Context,
 	resourceName string,
 	accessPolicy mdl.AccessPolicy,
 	queryString string,
 ) (*mdl.ExecuteResult, error) {
-	rootResource, exists := qf.schema.GetResource(resourceName)
+	resource, exists := executor.schema.GetResource(resourceName)
 	if !exists {
 		return nil, qerr.BindingErr("the table %s does not exist in the schema", resourceName)
 	}
 
-	queryParser := qf.queryParserInitialiser()
+	typedResult, err := execute(
+		executor,
+		resource,
+		ctx,
+		accessPolicy,
+		queryString,
+		func(
+			jsonData []byte,
+			projection *mdl.ProjectionNode,
+		) ([]mdl.TableModel, error) {
+			return resource.SliceFromJSON(jsonData, projection)
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// return the results
+	return &mdl.ExecuteResult{
+		Count:         typedResult.Count,
+		NextPageToken: typedResult.NextPageToken,
+		Data:          typedResult.Data,
+	}, nil
+}
+
+func Execute[T mdl.TableModel](
+	executor *QueryExecutor,
+	resource mdl.TypedResource[T],
+	ctx context.Context,
+	accessPolicy mdl.AccessPolicy,
+	queryString string,
+) (*mdl.TypedExecuteResult[T], error) {
+	return execute(
+		executor,
+		mdl.Resource(resource),
+		ctx,
+		accessPolicy,
+		queryString,
+		func(
+			jsonData []byte,
+			projection *mdl.ProjectionNode,
+		) ([]T, error) {
+			return resource.TypedSliceFromJSON(jsonData, projection)
+		},
+	)
+}
+
+func execute[T mdl.TableModel](
+	executor *QueryExecutor,
+	resource mdl.Resource,
+	ctx context.Context,
+	accessPolicy mdl.AccessPolicy,
+	queryString string,
+	materialize func(
+		[]byte,
+		*mdl.ProjectionNode,
+	) ([]T, error),
+) (*mdl.TypedExecuteResult[T], error) {
+
+	queryParser := executor.queryParserInitialiser()
 	valueBuilder := valuebuilder.NewValueBuilder()
 
 	// Plan query
-	s, err := qplan.PlanQuery(
-		qf.queryConfig,
+	plannedQuery, err := qplan.PlanQuery(
+		executor.queryConfig,
 		queryString,
 		queryParser,
-		qf.pagingTokenBuilder,
+		executor.pagingTokenBuilder,
 		valueBuilder,
-		rootResource,
+		resource,
 		accessPolicy,
 	)
 	if err != nil {
@@ -133,30 +182,29 @@ func (qf *queryExecutor) Execute(
 	}
 
 	// Write and execute the query
-	w := qf.queryWriterGetter(s)
-	json, count, err := qf.executeQueryStatement(ctx, s, w)
+	w := executor.queryWriterGetter(plannedQuery)
+	json, count, err := executor.executeQueryStatement(ctx, plannedQuery, w)
 
-	// Parse the query into a table model
-	queryResults, stdErr := rootResource.SliceFromJSON(
+	queryResults, err := materialize(
 		json,
-		s.ProjectionNode(),
+		plannedQuery.ProjectionNode(),
 	)
-	if stdErr != nil {
-		return nil, qerr.InternalErr("unable to create model slice: %v", stdErr)
+	if err != nil {
+		return nil, err
 	}
 
-	// Build the next page token
-	nextPageToken, err := qf.getNextPageToken(s, &queryResults)
+	nextPageToken, err := getNextPageToken(executor, plannedQuery, &queryResults)
 	if err != nil {
 		return nil, err
 	}
 
 	// return the results
-	return &mdl.ExecuteResult{
+	return &mdl.TypedExecuteResult[T]{
 		Count:         count,
 		NextPageToken: nextPageToken,
 		Data:          queryResults,
 	}, nil
+
 }
 
 // getSqlWriter returns a query writer factory for the requested SQL dialect.
@@ -171,9 +219,10 @@ func getSqlWriter(flavour querymodel.SqlFlavour) (QueryWriterGetter, error) {
 
 // getNextPageToken builds a pagination token when the query returned more
 // records than the configured page limit, and trims the results to that limit.
-func (e *queryExecutor) getNextPageToken(
+func getNextPageToken[T mdl.TableModel](
+	executor *QueryExecutor,
 	s qstore.QueryDataStore,
-	queryResults *[]mdl.TableModel,
+	queryResults *[]T,
 ) (string, error) {
 	results := *queryResults
 	limit := s.Limit()
@@ -185,7 +234,7 @@ func (e *queryExecutor) getNextPageToken(
 	lastRecord := results[limit-1]
 	*queryResults = results[0:limit]
 
-	return e.pagingTokenBuilder.BuildToken(
+	return executor.pagingTokenBuilder.BuildToken(
 		s,
 		lastRecord,
 	)
@@ -193,7 +242,7 @@ func (e *queryExecutor) getNextPageToken(
 
 // executeQueryStatement generates and executes the query SQL, optionally
 // executing a count query when requested.
-func (e *queryExecutor) executeQueryStatement(
+func (executor *QueryExecutor) executeQueryStatement(
 	ctx context.Context,
 	s qstore.QueryDataStore,
 	w mdl.QueryWriter,
@@ -211,13 +260,13 @@ func (e *queryExecutor) executeQueryStatement(
 			return nil, nil, err
 		}
 
-		json, count, err = e.repository.ExecuteJsonRequestWithCount(
+		json, count, err = executor.repository.ExecuteJsonRequestWithCount(
 			ctx,
 			queryStatement,
 			countStatement,
 		)
 	} else {
-		json, err = e.repository.ExecuteJsonRequest(ctx, queryStatement)
+		json, err = executor.repository.ExecuteJsonRequest(ctx, queryStatement)
 	}
 	if err != nil {
 		return nil, nil, qerr.InternalErr("query executor failed: %v", err)

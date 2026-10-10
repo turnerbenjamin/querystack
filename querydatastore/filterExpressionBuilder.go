@@ -97,20 +97,12 @@ func (eb filterExpressionBuilder) NewComparisonExpressionFromResolvedColumn(
 	}
 
 	// Validate that column and value have compatible types
-	if !value.SupportsType(column.Metadata.Type) {
+	if !value.SupportsComparison(column.Metadata.Type, operator) {
 		return nil, qerr.SyntaxErr(
-			"%s is not compatible with %s values",
+			"%s is not compatible with the comparison: %s %s",
 			column.Metadata.Name,
-			valuebuilder.ValueTypeString(value.Type()),
-		)
-	}
-
-	// Validate that the value is compatible with the operator
-	if !value.SupportsOperator(operator) {
-		return nil, qerr.SyntaxErr(
-			"values of type %s are not compatible with the %s operator",
-			valuebuilder.ValueTypeString(value.Type()),
 			operator,
+			valuebuilder.ValueTypeString(value.Type()),
 		)
 	}
 
