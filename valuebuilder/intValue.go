@@ -13,18 +13,18 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// intValue represents an integer query value.
-type intValue struct {
-	value int64
+// IntValue represents an integer query value.
+type IntValue struct {
+	Value int64
 }
 
 // Type returns the query value type represented by the value.
-func (v intValue) Type() mdl.ValueType {
+func (v IntValue) Type() mdl.ValueType {
 	return mdl.ValueTypeInt
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v intValue) SupportsComparison(
+func (v IntValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -36,17 +36,18 @@ func (v intValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation to the query writer for the
 // integer value.
-func (v intValue) WriteFilterExpression(
+func (v IntValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionInt(b, fieldName, op, v.value)
+	return w.WriteFilterExpressionInt(b, resourceAlias, column, op, v.Value)
 }
 
 // Serialise delegates serialization of the integer value to the provided
 // serialiser.
-func (v intValue) Serialise(s mdl.Serialiser) {
-	s.SerialiseInt(v.value)
+func (v IntValue) Serialise(s mdl.Serialiser) {
+	s.SerialiseInt(v.Value)
 }

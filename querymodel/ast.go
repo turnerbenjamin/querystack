@@ -117,7 +117,8 @@ type QueryWriter interface {
 	// WriteFilterExpressionNull writes a comparison expression for a null value
 	WriteFilterExpressionNull(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 	) error
 
@@ -125,7 +126,8 @@ type QueryWriter interface {
 	// value
 	WriteFilterExpressionString(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value string,
 	) error
@@ -134,7 +136,8 @@ type QueryWriter interface {
 	// value
 	WriteFilterExpressionInt(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value int64,
 	) error
@@ -143,7 +146,8 @@ type QueryWriter interface {
 	// floating-point value
 	WriteFilterExpressionFloat(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value float64,
 	) error
@@ -152,7 +156,8 @@ type QueryWriter interface {
 	// geographic point value
 	WriteFilterExpressionPoint(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value Point,
 	) error
@@ -161,7 +166,18 @@ type QueryWriter interface {
 	// value
 	WriteFilterExpressionDateTime(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
+		op ComparisonOperator,
+		value time.Time,
+	) error
+
+	// WriteFilterExpressionDateTime writes a comparison expression for a date
+	// value
+	WriteFilterExpressionDate(
+		sb *querybuilder.Builder,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value time.Time,
 	) error
@@ -170,7 +186,8 @@ type QueryWriter interface {
 	// value is list of string values
 	WriteFilterExpressionStringList(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value []string,
 	) error
@@ -179,7 +196,8 @@ type QueryWriter interface {
 	// value is list of integer values
 	WriteFilterExpressionIntList(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value []int64,
 	) error
@@ -188,7 +206,8 @@ type QueryWriter interface {
 	// value is list of floating-point values
 	WriteFilterExpressionFloatList(
 		sb *querybuilder.Builder,
-		field string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		op ComparisonOperator,
 		value []float64,
 	) error
@@ -218,7 +237,8 @@ type Value interface {
 	WriteFilterExpression(
 		b *querybuilder.Builder,
 		writer QueryWriter,
-		fieldName string,
+		resourceAlias string,
+		column *ResolvedColumn,
 		operator ComparisonOperator,
 	) error
 }

@@ -13,18 +13,18 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// floatValue represents a float query value.
-type floatValue struct {
-	value float64
+// FloatValue represents a float query value.
+type FloatValue struct {
+	Value float64
 }
 
 // Type returns the query value type represented by the value.
-func (v floatValue) Type() mdl.ValueType {
+func (v FloatValue) Type() mdl.ValueType {
 	return mdl.ValueTypeFloat
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v floatValue) SupportsComparison(
+func (v FloatValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -36,17 +36,18 @@ func (v floatValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation to the query writer for the
 // float value.
-func (v floatValue) WriteFilterExpression(
+func (v FloatValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionFloat(b, fieldName, op, v.value)
+	return w.WriteFilterExpressionFloat(b, resourceAlias, column, op, v.Value)
 }
 
 // Serialise delegates serialization of the float value to the provided
 // serialiser.
-func (v floatValue) Serialise(s mdl.Serialiser) {
-	s.SerialiseFloat(v.value)
+func (v FloatValue) Serialise(s mdl.Serialiser) {
+	s.SerialiseFloat(v.Value)
 }

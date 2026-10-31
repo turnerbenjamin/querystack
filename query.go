@@ -203,6 +203,7 @@ func execute[T mdl.TableModel](
 		Count:         count,
 		NextPageToken: nextPageToken,
 		Data:          queryResults,
+		Filter:        plannedQuery.FilterExpression(),
 	}, nil
 
 }

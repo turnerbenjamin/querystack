@@ -14,18 +14,18 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// floatListValue represents a list of float values.
-type floatListValue struct {
-	value []float64
+// FloatListValue represents a list of float values.
+type FloatListValue struct {
+	Value []float64
 }
 
 // Type returns the query value type represented by the value.
-func (v floatListValue) Type() mdl.ValueType {
+func (v FloatListValue) Type() mdl.ValueType {
 	return mdl.ValueTypeIntList
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v floatListValue) SupportsComparison(
+func (v FloatListValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -37,30 +37,31 @@ func (v floatListValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation to the query writer for the
 // float list value.
-func (v floatListValue) WriteFilterExpression(
+func (v FloatListValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionFloatList(b, fieldName, op, v.value)
+	return w.WriteFilterExpressionFloatList(b, resourceAlias, column, op, v.Value)
 }
 
 // Serialise delegates serialization of the float list to the provided
 // serialiser.
-func (v floatListValue) Serialise(s mdl.Serialiser) {
-	s.SerialiseFloatList(v.value)
+func (v FloatListValue) Serialise(s mdl.Serialiser) {
+	s.SerialiseFloatList(v.Value)
 }
 
 // buildFloatListValue constructs a float list value from float values.
 func buildFloatListValue(els []mdl.Value) (mdl.Value, error) {
-	o := floatListValue{
-		value: make([]float64, len(els)),
+	o := FloatListValue{
+		Value: make([]float64, len(els)),
 	}
 	for i, el := range els {
 		switch v := el.(type) {
-		case floatValue:
-			o.value[i] = v.value
+		case FloatValue:
+			o.Value[i] = v.Value
 		default:
 			return nil, qerr.InternalErr(
 				"float list does not support elements of type %s",

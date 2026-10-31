@@ -13,16 +13,16 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// nullValue represents a null query value.
-type nullValue struct{}
+// NullValue represents a null query value.
+type NullValue struct{}
 
 // Type returns the query value type represented by the value.
-func (v nullValue) Type() mdl.ValueType {
+func (v NullValue) Type() mdl.ValueType {
 	return mdl.ValueTypeNull
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v nullValue) SupportsComparison(
+func (v NullValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -31,17 +31,18 @@ func (v nullValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation for the null value to the
 // query writer.
-func (v nullValue) WriteFilterExpression(
+func (v NullValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionNull(b, fieldName, op)
+	return w.WriteFilterExpressionNull(b, resourceAlias, column, op)
 }
 
 // Serialise delegates serialization of the null value to the provided
 // serialiser.
-func (v nullValue) Serialise(s mdl.Serialiser) {
+func (v NullValue) Serialise(s mdl.Serialiser) {
 	s.SerialiseNull()
 }

@@ -420,7 +420,8 @@ func (w *queryWriter) writeComparisonExpression(
 		return ex.Value.WriteFilterExpression(
 			b,
 			w,
-			fmt.Sprintf("%s.%s", endResource.alias, ex.ResolvedColumn.Metadata.Name),
+			endResource.alias,
+			ex.ResolvedColumn,
 			ex.Operator,
 		)
 	}
@@ -639,14 +640,16 @@ func negateComparisonOperator(operator mdl.ComparisonOperator) (mdl.ComparisonOp
 // semantics respectively.
 func (w *queryWriter) WriteFilterExpressionNull(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
+
 	switch op {
 	case mdl.ComparisonEq:
-		b.Write("%s IS NULL", fieldName)
+		b.Write("%s.%s IS NULL", resourceAlias, column.Metadata.Name)
 	case mdl.ComparisonNe:
-		b.Write("%s IS NOT NULL", fieldName)
+		b.Write("%s.%s IS NOT NULL", resourceAlias, column.Metadata.Name)
 	default:
 		return fmt.Errorf("unsupported operation: %s", string(op))
 	}
@@ -660,23 +663,24 @@ func (w *queryWriter) WriteFilterExpressionNull(
 // suffix comparisons are emitted using SQL LIKE expressions.
 func (w *queryWriter) WriteFilterExpressionString(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value string,
 ) error {
 	switch op {
 	case mdl.ComparisonEq:
-		b.Write("%s = %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s = %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonNe:
-		b.Write("%s != %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s != %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGt:
-		b.Write("%s > %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s > %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGe:
-		b.Write("%s >= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s >= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLt:
-		b.Write("%s < %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s < %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLe:
-		b.Write("%s <= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s <= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonContains, mdl.ComparisonNotContains:
 		modifier := ""
 		if op == mdl.ComparisonNotContains {
@@ -684,7 +688,7 @@ func (w *queryWriter) WriteFilterExpressionString(
 		}
 
 		pattern := fmt.Sprintf("%%%s%%", value)
-		b.Write("%s %sLIKE %s", fieldName, modifier, b.Placeholder(pattern))
+		b.Write("%s.%s %sLIKE %s", resourceAlias, column.Metadata.Name, modifier, b.Placeholder(pattern))
 
 	case mdl.ComparisonStartsWith, mdl.ComparisonNotStartsWith:
 		modifier := ""
@@ -693,7 +697,7 @@ func (w *queryWriter) WriteFilterExpressionString(
 		}
 
 		pattern := fmt.Sprintf("%s%%", value)
-		b.Write("%s %sLIKE %s", fieldName, modifier, b.Placeholder(pattern))
+		b.Write("%s.%s %sLIKE %s", resourceAlias, column.Metadata.Name, modifier, b.Placeholder(pattern))
 	case mdl.ComparisonEndsWith, mdl.ComparisonNotEndsWith:
 		modifier := ""
 		if op == mdl.ComparisonNotEndsWith {
@@ -701,7 +705,7 @@ func (w *queryWriter) WriteFilterExpressionString(
 		}
 
 		pattern := fmt.Sprintf("%%%s", value)
-		b.Write("%s %sLIKE %s", fieldName, modifier, b.Placeholder(pattern))
+		b.Write("%s.%s %sLIKE %s", resourceAlias, column.Metadata.Name, modifier, b.Placeholder(pattern))
 	default:
 		return fmt.Errorf("unsupported string operation: %s", string(op))
 	}
@@ -712,23 +716,24 @@ func (w *queryWriter) WriteFilterExpressionString(
 // integer value.
 func (w *queryWriter) WriteFilterExpressionInt(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value int64,
 ) error {
 	switch op {
 	case mdl.ComparisonEq:
-		b.Write("%s = %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s = %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonNe:
-		b.Write("%s != %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s != %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGt:
-		b.Write("%s > %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s > %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGe:
-		b.Write("%s >= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s >= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLt:
-		b.Write("%s < %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s < %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLe:
-		b.Write("%s <= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s <= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	default:
 		return fmt.Errorf("unsupported int operation: %s", string(op))
 	}
@@ -739,23 +744,24 @@ func (w *queryWriter) WriteFilterExpressionInt(
 // floating-point value.
 func (w *queryWriter) WriteFilterExpressionFloat(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value float64,
 ) error {
 	switch op {
 	case mdl.ComparisonEq:
-		b.Write("%s = %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s = %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonNe:
-		b.Write("%s != %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s != %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGt:
-		b.Write("%s > %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s > %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGe:
-		b.Write("%s >= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s >= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLt:
-		b.Write("%s < %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s < %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLe:
-		b.Write("%s <= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s <= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	default:
 		return fmt.Errorf("unsupported float operation: %s", string(op))
 	}
@@ -766,7 +772,8 @@ func (w *queryWriter) WriteFilterExpressionFloat(
 // support filter comparison operations.
 func (w *queryWriter) WriteFilterExpressionPoint(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value mdl.Point,
 ) error {
@@ -777,23 +784,77 @@ func (w *queryWriter) WriteFilterExpressionPoint(
 // time value.
 func (w *queryWriter) WriteFilterExpressionDateTime(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value time.Time,
 ) error {
 	switch op {
 	case mdl.ComparisonEq:
-		b.Write("%s = %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s = %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonNe:
-		b.Write("%s != %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s != %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGt:
-		b.Write("%s > %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s > %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonGe:
-		b.Write("%s >= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s >= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLt:
-		b.Write("%s < %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s < %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
 	case mdl.ComparisonLe:
-		b.Write("%s <= %s", fieldName, b.Placeholder(value))
+		b.Write("%s.%s <= %s", resourceAlias, column.Metadata.Name, b.Placeholder(value))
+	default:
+		return fmt.Errorf("unsupported date/time operation: %s", string(op))
+	}
+	return nil
+}
+
+// WriteFilterExpressionDateTime writes a parameterised SQL comparison for a
+// date value.
+func (w *queryWriter) WriteFilterExpressionDate(
+	b *querybuilder.Builder,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
+	op mdl.ComparisonOperator,
+	value time.Time,
+) error {
+	dayStart := time.Date(
+		value.Year(), value.Month(), value.Day(), 0, 0, 0, 0,
+		value.Location(),
+	)
+
+	dayEnd := dayStart.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	switch op {
+	case mdl.ComparisonEq:
+		b.Write(
+			"(%s.%s >= %s AND %s.%s <= %s)",
+			resourceAlias,
+			column.Metadata.Name,
+			b.Placeholder(dayStart),
+			resourceAlias,
+			column.Metadata.Name,
+			b.Placeholder(dayEnd),
+		)
+
+	case mdl.ComparisonNe:
+		b.Write(
+			"(%s.%s < %s OR %s.%s > %s)",
+			resourceAlias,
+			column.Metadata.Name,
+			b.Placeholder(dayStart),
+			resourceAlias,
+			column.Metadata.Name,
+			b.Placeholder(dayEnd),
+		)
+
+	case mdl.ComparisonGt:
+		b.Write("%s.%s > %s", resourceAlias, column.Metadata.Name, b.Placeholder(dayStart))
+	case mdl.ComparisonGe:
+		b.Write("%s.%s >= %s", resourceAlias, column.Metadata.Name, b.Placeholder(dayStart))
+	case mdl.ComparisonLt:
+		b.Write("%s.%s < %s", resourceAlias, column.Metadata.Name, b.Placeholder(dayEnd))
+	case mdl.ComparisonLe:
+		b.Write("%s.%s <= %s", resourceAlias, column.Metadata.Name, b.Placeholder(dayEnd))
 	default:
 		return fmt.Errorf("unsupported date/time operation: %s", string(op))
 	}
@@ -804,7 +865,8 @@ func (w *queryWriter) WriteFilterExpressionDateTime(
 // expression for a list of string values.
 func (w *queryWriter) WriteFilterExpressionStringList(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value []string,
 ) error {
@@ -812,7 +874,8 @@ func (w *queryWriter) WriteFilterExpressionStringList(
 
 	return w.writeList(
 		b,
-		fieldName,
+		resourceAlias,
+		column,
 		listLen,
 		op,
 		func(i int) error {
@@ -829,7 +892,8 @@ func (w *queryWriter) WriteFilterExpressionStringList(
 // of integer values.
 func (w *queryWriter) WriteFilterExpressionIntList(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value []int64,
 ) error {
@@ -837,7 +901,8 @@ func (w *queryWriter) WriteFilterExpressionIntList(
 
 	return w.writeList(
 		b,
-		fieldName,
+		resourceAlias,
+		column,
 		listLen,
 		op,
 		func(i int) error {
@@ -856,7 +921,8 @@ func (w *queryWriter) WriteFilterExpressionIntList(
 // list of floating-point values.
 func (w *queryWriter) WriteFilterExpressionFloatList(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 	value []float64,
 ) error {
@@ -864,7 +930,8 @@ func (w *queryWriter) WriteFilterExpressionFloatList(
 
 	return w.writeList(
 		b,
-		fieldName,
+		resourceAlias,
+		column,
 		listLen,
 		op,
 		func(i int) error {
@@ -886,7 +953,8 @@ func (w *queryWriter) WriteFilterExpressionFloatList(
 // query builder.
 func (w *queryWriter) writeList(
 	b *querybuilder.Builder,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	listLength int,
 	op mdl.ComparisonOperator,
 	writeValue func(i int) error,
@@ -900,7 +968,7 @@ func (w *queryWriter) writeList(
 		negationModifier = "NOT"
 	}
 
-	b.Write("%s %sIN (", fieldName, negationModifier)
+	b.Write("%s.%s %sIN (", resourceAlias, column, negationModifier)
 	for i := range listLength {
 		if i != 0 {
 			b.Write(",")

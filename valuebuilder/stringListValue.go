@@ -14,18 +14,18 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// stringListValue represents a list of string query values.
-type stringListValue struct {
-	value []string
+// StringListValue represents a list of string query values.
+type StringListValue struct {
+	Value []string
 }
 
 // Type returns the query value type represented by the value.
-func (v stringListValue) Type() mdl.ValueType {
+func (v StringListValue) Type() mdl.ValueType {
 	return mdl.ValueTypeStringList
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v stringListValue) SupportsComparison(
+func (v StringListValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -37,24 +37,25 @@ func (v stringListValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation to the query writer for the
 // string list value.
-func (v stringListValue) WriteFilterExpression(
+func (v StringListValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionStringList(b, fieldName, op, v.value)
+	return w.WriteFilterExpressionStringList(b, resourceAlias, column, op, v.Value)
 }
 
 // buildStringListValue constructs a string list value from string values.
 func buildStringListValue(els []mdl.Value) (mdl.Value, error) {
-	o := stringListValue{
-		value: make([]string, len(els)),
+	o := StringListValue{
+		Value: make([]string, len(els)),
 	}
 	for i, el := range els {
 		switch v := el.(type) {
-		case stringValue:
-			o.value[i] = v.value
+		case StringValue:
+			o.Value[i] = v.Value
 		default:
 			return nil, qerr.InternalErr(
 				"string list does not support elements of type %s",
@@ -67,6 +68,6 @@ func buildStringListValue(els []mdl.Value) (mdl.Value, error) {
 
 // Serialise delegates serialization of the string list to the provided
 // serialiser.
-func (v stringListValue) Serialise(s mdl.Serialiser) {
-	s.SerialiseStringList(v.value)
+func (v StringListValue) Serialise(s mdl.Serialiser) {
+	s.SerialiseStringList(v.Value)
 }

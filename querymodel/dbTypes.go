@@ -19,6 +19,9 @@ const (
 	// DbTypeDateType represents a date and time database value
 	DbTypeDateTime DbType = "date/time"
 
+	// DbTypeDateType represents a date database value
+	DbTypeDate DbType = "date"
+
 	// DbTypeEnum represents an enum value
 	DbTypeEnum DbType = "enum"
 )
@@ -82,6 +85,17 @@ var ComparisonSupport = map[DbType]operatorSupport{
 		collectionValue: map[ComparisonOperator]struct{}{},
 	},
 	DbTypeDateTime: {
+		singleValue: map[ComparisonOperator]struct{}{
+			ComparisonEq: {},
+			ComparisonNe: {},
+			ComparisonGt: {},
+			ComparisonGe: {},
+			ComparisonLt: {},
+			ComparisonLe: {},
+		},
+		collectionValue: map[ComparisonOperator]struct{}{},
+	},
+	DbTypeDate: {
 		singleValue: map[ComparisonOperator]struct{}{
 			ComparisonEq: {},
 			ComparisonNe: {},

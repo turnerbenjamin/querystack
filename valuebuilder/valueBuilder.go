@@ -26,32 +26,32 @@ func NewValueBuilder() mdl.ValueBuilder {
 
 // Null creates a null query value.
 func (valueBuilder) Null() mdl.Value {
-	return nullValue{}
+	return NullValue{}
 }
 
 // String creates a string query value.
 func (valueBuilder) String(s string) mdl.Value {
-	return stringValue{value: s}
+	return StringValue{Value: s}
 }
 
 // Int creates an integer query value.
 func (valueBuilder) Int(i int64) mdl.Value {
-	return intValue{value: i}
+	return IntValue{Value: i}
 }
 
 // Float creates a float query value.
 func (valueBuilder) Float(f float64) mdl.Value {
-	return floatValue{value: f}
+	return FloatValue{Value: f}
 }
 
 // Point creates a point query value from longitude and latitude coordinates.
 func (valueBuilder) Point(longitude float64, latitude float64) mdl.Value {
-	return pointValue{value: mdl.NewPoint(longitude, latitude)}
+	return PointValue{Value: mdl.NewPoint(longitude, latitude)}
 }
 
 // DateTime creates a date-time query value.
 func (valueBuilder) DateTime(dt time.Time) mdl.Value {
-	return dateTimeValue{value: dt}
+	return DateTimeValue{Value: dt}
 }
 
 // List creates a typed query list from the supplied values.
@@ -69,7 +69,7 @@ func (valueBuilder) ExecuteDeserialisation(
 
 	// DESERIALISE - NULL
 	case mdl.ValueTypeNull:
-		return nullValue{}, nil
+		return NullValue{}, nil
 
 	// DESERIALISE - STRING
 	case mdl.ValueTypeString:
@@ -77,7 +77,7 @@ func (valueBuilder) ExecuteDeserialisation(
 		if err != nil {
 			return nil, err
 		}
-		return stringValue{value: v}, nil
+		return StringValue{Value: v}, nil
 
 	// DESERIALISE - INT
 	case mdl.ValueTypeInt:
@@ -85,7 +85,7 @@ func (valueBuilder) ExecuteDeserialisation(
 		if err != nil {
 			return nil, err
 		}
-		return intValue{value: v}, nil
+		return IntValue{Value: v}, nil
 
 	// DESERIALISE - FLOAT
 	case mdl.ValueTypeFloat:
@@ -93,7 +93,7 @@ func (valueBuilder) ExecuteDeserialisation(
 		if err != nil {
 			return nil, err
 		}
-		return floatValue{value: v}, nil
+		return FloatValue{Value: v}, nil
 
 	// DESERIALISE - TIME
 	case mdl.ValueTypeDateTime:
@@ -101,7 +101,7 @@ func (valueBuilder) ExecuteDeserialisation(
 		if err != nil {
 			return nil, err
 		}
-		return dateTimeValue{value: v}, nil
+		return DateTimeValue{Value: v}, nil
 
 	// DESERIALISE - POINT
 	case mdl.ValueTypePoint:
@@ -109,22 +109,22 @@ func (valueBuilder) ExecuteDeserialisation(
 		if err != nil {
 			return nil, err
 		}
-		return pointValue{value: v}, nil
+		return PointValue{Value: v}, nil
 
 	// DESERIALISE - STRING LIST
 	case mdl.ValueTypeStringList:
 		stringValues, err := ds.DeserialiseListString(d)
-		return stringListValue{value: stringValues}, err
+		return StringListValue{Value: stringValues}, err
 
 	// DESERIALISE - INT LIST
 	case mdl.ValueTypeIntList:
 		values, err := ds.DeserialiseListInt(d)
-		return intListValue{value: values}, err
+		return IntListValue{Value: values}, err
 
 	// DESERIALISE - FLOAT LIST
 	case mdl.ValueTypeFloatList:
 		values, err := ds.DeserialiseListFloat(d)
-		return floatListValue{value: values}, err
+		return FloatListValue{Value: values}, err
 	}
 	return nil, qerr.InternalErr(
 		"Unable to deserialise values to type %s",

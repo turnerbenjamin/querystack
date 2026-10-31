@@ -13,18 +13,18 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// pointValue represents a point query value.
-type pointValue struct {
-	value mdl.Point
+// PointValue represents a point query value.
+type PointValue struct {
+	Value mdl.Point
 }
 
 // Type returns the query value type represented by the value.
-func (v pointValue) Type() mdl.ValueType {
+func (v PointValue) Type() mdl.ValueType {
 	return mdl.ValueTypePoint
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v pointValue) SupportsComparison(
+func (v PointValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -36,17 +36,18 @@ func (v pointValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation to the query writer for
 // the point value.
-func (v pointValue) WriteFilterExpression(
+func (v PointValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionPoint(b, fieldName, op, v.value)
+	return w.WriteFilterExpressionPoint(b, resourceAlias, column, op, v.Value)
 }
 
 // Serialise delegates serialization of the point value to the provided
 // serialiser.
-func (v pointValue) Serialise(s mdl.Serialiser) {
-	s.SerialisePoint(v.value)
+func (v PointValue) Serialise(s mdl.Serialiser) {
+	s.SerialisePoint(v.Value)
 }

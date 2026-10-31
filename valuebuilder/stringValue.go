@@ -13,18 +13,18 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// stringValue represents a string query value.
-type stringValue struct {
-	value string
+// StringValue represents a string query value.
+type StringValue struct {
+	Value string
 }
 
 // Type returns the query value type represented by the value.
-func (v stringValue) Type() mdl.ValueType {
+func (v StringValue) Type() mdl.ValueType {
 	return mdl.ValueTypeString
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v stringValue) SupportsComparison(
+func (v StringValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -36,17 +36,18 @@ func (v stringValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation to the query writer for the
 // string value.
-func (v stringValue) WriteFilterExpression(
+func (v StringValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionString(b, fieldName, op, v.value)
+	return w.WriteFilterExpressionString(b, resourceAlias, column, op, v.Value)
 }
 
 // Serialise delegates serialization of the string value to the provided
 // serialiser.
-func (v stringValue) Serialise(s mdl.Serialiser) {
-	s.SerialiseString(v.value)
+func (v StringValue) Serialise(s mdl.Serialiser) {
+	s.SerialiseString(v.Value)
 }

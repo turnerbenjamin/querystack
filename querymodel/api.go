@@ -25,6 +25,7 @@ type TypedExecuteResult[T TableModel] struct {
 	Count         *uint64 `json:"count,omitempty"`
 	NextPageToken string  `json:"next_page_token,omitempty"`
 	Data          []T     `json:"data"`
+	Filter        FilterExpression
 }
 
 // QueryStatement represents a query statement and the args for any placeholder

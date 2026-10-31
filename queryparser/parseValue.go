@@ -148,7 +148,7 @@ func parseNumberValue(
 		}
 	}
 
-	multiplier := 0
+	multiplier := 1
 	if doNegate {
 		multiplier = -1
 	}
@@ -256,7 +256,6 @@ func tryParseDateTime(t *Tokeniser, tkn token, v mdl.ValueBuilder) (mdl.Value, e
 	for {
 		// if closing parenthesis, consume and break
 		if tkn.Type == TokenParenR {
-			t.Next()
 			break
 		}
 

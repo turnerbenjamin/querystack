@@ -14,18 +14,18 @@ import (
 	mdl "github.com/turnerbenjamin/querystack/querymodel"
 )
 
-// intListValue represents a list of integer query values.
-type intListValue struct {
-	value []int64
+// IntListValue represents a list of integer query values.
+type IntListValue struct {
+	Value []int64
 }
 
 // Type returns the query value type represented by the value.
-func (v intListValue) Type() mdl.ValueType {
+func (v IntListValue) Type() mdl.ValueType {
 	return mdl.ValueTypeIntList
 }
 
 // SupportsComparison indicates if a comparison can be made with the given value
-func (v intListValue) SupportsComparison(
+func (v IntListValue) SupportsComparison(
 	t mdl.DbType,
 	op mdl.ComparisonOperator,
 ) bool {
@@ -37,30 +37,31 @@ func (v intListValue) SupportsComparison(
 
 // WriteFilterExpression delegates filter generation to the query writer for the
 // integer list value.
-func (v intListValue) WriteFilterExpression(
+func (v IntListValue) WriteFilterExpression(
 	b *querybuilder.Builder,
 	w mdl.QueryWriter,
-	fieldName string,
+	resourceAlias string,
+	column *mdl.ResolvedColumn,
 	op mdl.ComparisonOperator,
 ) error {
-	return w.WriteFilterExpressionIntList(b, fieldName, op, v.value)
+	return w.WriteFilterExpressionIntList(b, resourceAlias, column, op, v.Value)
 }
 
 // Serialise delegates serialization of the integer list to the provided
 // serialiser.
-func (v intListValue) Serialise(s mdl.Serialiser) {
-	s.SerialiseIntList(v.value)
+func (v IntListValue) Serialise(s mdl.Serialiser) {
+	s.SerialiseIntList(v.Value)
 }
 
 // buildIntListValue constructs an integer list value from integer values.
 func buildIntListValue(els []mdl.Value) (mdl.Value, error) {
-	o := intListValue{
-		value: make([]int64, len(els)),
+	o := IntListValue{
+		Value: make([]int64, len(els)),
 	}
 	for i, el := range els {
 		switch v := el.(type) {
-		case intValue:
-			o.value[i] = v.value
+		case IntValue:
+			o.Value[i] = v.Value
 		default:
 			return nil, qerr.InternalErr(
 				"int list does not support elements of type %s",
